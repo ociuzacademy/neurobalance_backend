@@ -1,0 +1,70 @@
+{% extends "admin_dashboard.html" %}
+{% block content %}
+
+<h2 style="text-align:center; color:#0558e7;"> Edit Book</h2>
+
+<div style="display: flex; justify-content: center; margin-top: 20px;">
+    <form method="POST" enctype="multipart/form-data" 
+          style="width: 450px; background: #fff; padding: 25px; border-radius: 10px; 
+                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Title</label>
+            <input type="text" name="title" value="{{ book.title }}" required
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Author</label>
+            <input type="text" name="author" value="{{ book.author }}"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Description</label>
+            <textarea name="description"
+                      style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; min-height: 100px;">{{ book.description }}</textarea>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Category</label>
+            <input type="text" name="category" value="{{ book.category }}"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Publisher</label>
+            <input type="text" name="publisher" value="{{ book.publisher }}"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Publication Date</label>
+            <input type="date" name="publication_date" value="{{ book.publication_date|date:'Y-m-d' }}"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Current Cover</label><br>
+            {% if book.cover_image %}
+                <img src="{{ book.cover_image.url }}" width="120" style="margin-top:10px; border-radius:6px;">
+            {% else %}
+                <p style="color: #888;">No image</p>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="font-weight: bold;">Upload New Cover (optional)</label>
+            <input type="file" name="cover_image"
+                   style="width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <button type="submit"
+                style="width: 100%; background: #0558e7; color: white; border: none; 
+                       padding: 14px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">
+            Update Book
+        </button>
+    </form>
+</div>
+{% endblock %}

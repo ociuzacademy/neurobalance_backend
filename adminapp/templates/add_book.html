@@ -1,0 +1,59 @@
+{% extends "admin_dashboard.html" %}
+{% block content %}
+<h2 style="text-align:center; color:#0558e7;"> Add Book</h2>
+<div style="display: flex; justify-content: center; margin-top: 20px;">
+    <form method="POST" enctype="multipart/form-data" 
+          style="width: 550px; background: #fff; padding: 25px; border-radius: 10px; 
+                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Title</label>
+            <input type="text" name="title" required
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Author</label>
+            <input type="text" name="author"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Description</label>
+            <textarea name="description"
+                      style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; min-height: 100px;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Category</label>
+            <input type="text" name="category"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Publisher</label>
+            <input type="text" name="publisher"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Publication Date</label>
+            <input type="date" name="publication_date"
+                   style="width: 90%; padding: 12px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Cover Image</label>
+            <input type="file" name="cover_image"
+                   style="width: 90%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+        </div>
+
+        <button type="submit"
+                style="width: 100%; background: #0558e7; color: white; border: none; 
+                       padding: 14px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">
+            Add Book
+        </button>
+    </form>
+</div>
+{% endblock %}

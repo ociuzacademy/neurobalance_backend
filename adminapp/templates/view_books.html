@@ -1,0 +1,132 @@
+{% extends "admin_dashboard.html" %}
+{% block content %}
+
+<h2 style="text-align:center; margin-bottom: 30px; color: #0558e7;">All Books</h2>
+
+<div style="text-align:center; margin-bottom: 30px;">
+    <a href="{% url 'add_book' %}" 
+       style="padding: 10px 20px; background-color: #0558e7; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+        + Add New Book
+    </a>
+</div>
+<div style="text-align:center; margin-bottom: 25px;">
+    <form method="get" style="display: inline-flex; gap: 10px; align-items: center;">
+        
+        <label style="font-weight: bold;">Filter by Category:</label>
+
+        <select name="category" 
+                onchange="this.form.submit()"
+                style="padding: 6px 10px; border-radius: 5px;">
+            
+            <option value="">All</option>
+
+            {% for cat in categories %}
+                <option value="{{ cat }}" 
+                        {% if cat == selected_category %}selected{% endif %}>
+                    {{ cat }}
+                </option>
+            {% endfor %}
+        </select>
+
+        {% if selected_category %}
+        <a href="{% url 'view_books' %}" 
+           style="padding: 6px 10px; background: #ccc; border-radius: 5px; text-decoration: none;">
+            Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+    <thead>
+        <tr style="background-color: #0558e7; color: white; text-align: center;">
+            <th style="padding: 12px; font-weight: bold; width: 5%;">#</th>
+            <th style="padding: 12px; font-weight: bold; width: 25%;">Title</th>
+            <th style="padding: 12px; font-weight: bold; width: 15%;">Author</th>
+            <th style="padding: 12px; font-weight: bold; width: 15%;">Category</th>
+            <th style="padding: 12px; font-weight: bold; width: 10%;">Cover</th>
+            <th style="padding: 12px; font-weight: bold; width: 30%;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+{% for book in books %}
+<tr style="border-bottom: 1px solid #ddd; text-align: center;">
+    <td>{{ forloop.counter }}</td>
+    <td>{{ book.title }}</td>
+    <td>{{ book.author }}</td>
+    <td>{{ book.category }}</td>
+
+
+    <td>
+        {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" width="80">
+        {% else %}
+            No image
+        {% endif %}
+    </td>
+
+    <td>
+        <button class="btn btn-sm btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#bookModal{{ book.id }}">
+            View Details
+        </button>
+
+        <a href="{% url 'edit_book' book.id %}" class="btn btn-sm btn-success">Edit</a>
+        <a href="{% url 'delete_book' book.id %}"
+           onclick="return confirm('Delete this book?')"
+           class="btn btn-sm btn-danger">
+           Delete
+        </a>
+    </td>
+</tr>
+
+<!-- ✅ MODAL INSIDE LOOP -->
+<div class="modal fade" id="bookModal{{ book.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">{{ book.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-4 text-center">
+            {% if book.cover_image %}
+              <img src="{{ book.cover_image.url }}" class="img-fluid rounded">
+            {% else %}
+              <p>No cover image</p>
+            {% endif %}
+          </div>
+
+          <div class="col-md-8">
+            <p><strong>Author:</strong> {{ book.author }}</p>
+            <p><strong>Category:</strong> {{ book.category }}</p>
+            <p><strong>Publisher:</strong> {{ book.publisher }}</p>
+            <p><strong>Publication Date:</strong> {{ book.publication_date }}</p>
+            <hr>
+            <p><strong>Description:</strong></p>
+            <p>{{ book.description|default:"No description available" }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% empty %}
+<tr>
+    <td colspan="6" style="text-align: center; padding: 20px;">No books found</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'admin_dashboard.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3 text-center">Rejected Doctors</h2>
+    
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Specialization</th>
+                <th>Experience</th>
+                <th>Hospital Address</th>
+                <th>Profile</th>
+                <th>ID Card</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doctor in hospital_rejected %}
+            <tr>
+                <td>{{ doctor.name }}</td>
+                <td>{{ doctor.email }}</td>
+                <td>{{ doctor.specialization }}</td>
+                <td>{{ doctor.experience }} years</td>
+                <td>{{ doctor.hospital_address }}</td>
+                <td>
+                    {% if doctor.image %}
+                    <img src="{{ doctor.image.url }}" width="70" height="70" class="rounded img-thumb"
+                         style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#imageModal"
+                         data-image-url="{{ doctor.image.url }}" alt="Profile">
+                    {% else %}
+                        No image
+                    {% endif %}
+                </td>
+                <td>
+                    {% if doctor.medical_id %}
+                    <img src="{{ doctor.medical_id.url }}" width="70" height="70" class="rounded img-thumb"
+                         style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#imageModal"
+                         data-image-url="{{ doctor.medical_id.url }}" alt="ID Card">
+                    {% else %}
+                        No image
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'approve_hospital_doctor' doctor.id %}" class="btn btn-success btn-sm">Approve</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="text-center">No rejected hospital doctors</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Image preview modal (reusable) -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" class="img-fluid rounded" alt="Image Preview">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var imageModal = document.getElementById('imageModal');
+    if (!imageModal) return;
+
+    imageModal.addEventListener('show.bs.modal', function (event) {
+      var trigger = event.relatedTarget;
+      if (!trigger) return;
+      var imgUrl = trigger.getAttribute('data-image-url');
+      var modalImg = document.getElementById('modalImage');
+      if (modalImg && imgUrl) modalImg.src = imgUrl;
+    });
+
+    imageModal.addEventListener('hidden.bs.modal', function () {
+      var modalImg = document.getElementById('modalImage');
+      if (modalImg) modalImg.src = '';
+    });
+  })();
+</script>
+
+{% endblock %}

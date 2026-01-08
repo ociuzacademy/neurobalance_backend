@@ -1,0 +1,64 @@
+{% extends 'admin_dashboard.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">All Hospital Bookings</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for booking in hospital_bookings %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+
+                    <!-- User -->
+                    <td>{{ booking.user.name }}</td>
+
+                    <!-- Doctor (handle deleted doctor) -->
+                    <td>
+                        {% if booking.doctor %}
+                            {{ booking.doctor.name }}
+                        {% else %}
+                            <span class="text-muted">Doctor Deleted</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ booking.date }}</td>
+                    <td>{{ booking.time }}</td>
+
+                    <!-- Status Badge -->
+                    <td>
+                        {% if booking.status == 'booked' %}
+                            <span class="badge bg-success">Booked</span>
+                        {% elif booking.status == 'cancelled' %}
+                            <span class="badge bg-danger">Cancelled</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ booking.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No hospital bookings yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
