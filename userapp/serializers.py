@@ -63,3 +63,58 @@ class ADHDPredictionSerializer(serializers.ModelSerializer):
         model = ADHDPrediction
         fields = '__all__'
 
+
+
+
+from rest_framework import serializers
+from .models import tbl_hospital_doctor_register
+
+class HospitalDoctorProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tbl_hospital_doctor_register
+        fields = [
+            'name', 'email', 'qualification', 'specialization', 'experience',
+            'hospital_address', 'hospital_phone', 'latitude', 'longitude', 'age',
+            'gender', 'place', 'image', 'medical_id','hospital_name'
+        ]
+        extra_kwargs = {
+            'email': {'required': False},
+        }
+
+
+
+
+
+class HospitalDoctorTimeSlotGroupSerializer(serializers.ModelSerializer):
+    doctor_name = serializers.CharField(source='doctor.name', read_only=True)
+    timeslots = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )  # ✅ accept list of time strings like ["10:00", "10:30"]
+
+    class Meta:
+        model = HospitalDoctorTimeSlotGroup
+        fields = ['id', 'doctor', 'doctor_name', 'date', 'start_time', 'end_time', 'timeslots']
+
+
+
+
+class HospitalDoctorFeedbackSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    doctor_name = serializers.CharField(source='doctor.name', read_only=True)
+
+    class Meta:
+        model = HospitalDoctorFeedback
+        fields = ['id', 'user', 'user_name', 'doctor', 'doctor_name', 'rating', 'comments', 'created_at']
+        
+
+
+
+
+
+
+
+from adminapp.models import Book
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Book
+        fields="__all__"

@@ -28,7 +28,10 @@ def admin_login(request):
 from django.shortcuts import render, redirect
 from userapp.models import (
     Register,
+    ADHDPrediction,
+    DepressionPrediction,
     tbl_hospital_doctor_register,
+    HospitalBooking
 )
 
 def admin_dashboard(request):
@@ -38,6 +41,9 @@ def admin_dashboard(request):
     context = {
         # OVERVIEW COUNTS
         "total_users": Register.objects.filter(role='user').count(),
+        "total_bookings": HospitalBooking.objects.count(),
+        "adhd_predictions": ADHDPrediction.objects.count(),
+        "depression_predictions": DepressionPrediction.objects.count(),
 
         # DOCTOR COUNTS
         "pending_doctors_count": tbl_hospital_doctor_register.objects.filter(status='pending').count(),
@@ -49,7 +55,7 @@ def admin_dashboard(request):
         "pending_doctors": tbl_hospital_doctor_register.objects.filter(status='pending'),
         "approved_doctors": tbl_hospital_doctor_register.objects.filter(status='approved'),
         "rejected_doctors": tbl_hospital_doctor_register.objects.filter(status='rejected'),
-       
+        "bookings": HospitalBooking.objects.select_related('user', 'doctor').order_by('-date'),
         "total_books": Book.objects.count(),
     }
 
@@ -118,6 +124,24 @@ def view_rejected_doctors(request):
     return render(request, 'rejected_doctors.html', {
         'hospital_rejected': hospital_rejected
     })
+
+
+
+
+def admin_view_hospital_bookings(request):
+    hospital_bookings = (
+        HospitalBooking.objects
+        .select_related('user', 'doctor')
+        
+        .order_by('-date', '-id')
+    )
+
+    return render(request, 'view_all_bookings.html', {
+        'hospital_bookings': hospital_bookings
+    })
+
+
+
 
 
 
