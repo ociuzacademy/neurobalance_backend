@@ -40,7 +40,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 
-
+    path('chat/', ChatbotAPIView.as_view(), name='chatbot_api'),
     path("predict/", depression_predict, name="depression_predict"),
     path("predict-adhd/", views.adhd_predict, name="adhd_predict"),
     path("user_view_book/", UserViewBook.as_view(), name="user_view_book"),
@@ -55,4 +55,5 @@ urlpatterns = [
     path('hospital/doctor/book-slot/', views.book_hospital_doctor_slot, name='book_hospital_doctor_slot'),
     path('user/<int:user_id>/hospital/bookings/', views.user_view_booking_hospital.as_view(), name='user_view_hospital_bookings'),
     path('hospital/doctor/<int:doctor_id>/bookings/', views.doctor_view_booking_hospital.as_view(), name='doctor_view_booking_hospital'),
+    path("timetablechat/", TimetableAPIView.as_view(), name="chat"),
 ]

@@ -13,6 +13,29 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 
+# serializers.py
+from rest_framework import serializers
+from .models import DepressionPrediction
+
+class DepressionPredictionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DepressionPrediction
+        fields = '__all__'
+
+class AdvancedDepressionPredictionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdvancedDepressionPrediction
+        fields = '__all__'
+
+
+class ADHDPredictionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ADHDPrediction
+        fields = '__all__'
+
+
+
+
 from rest_framework import serializers
 from .models import tbl_hospital_doctor_register
 
@@ -43,25 +66,6 @@ from rest_framework import serializers
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
-
-
-
-
-
-# serializers.py
-from rest_framework import serializers
-from .models import DepressionPrediction
-
-class DepressionPredictionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DepressionPrediction
-        fields = '__all__'
-
-
-class ADHDPredictionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ADHDPrediction
-        fields = '__all__'
 
 
 

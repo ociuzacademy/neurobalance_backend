@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 # Create your views here.
 from django.shortcuts import render
 from rest_framework.decorators import api_view
@@ -88,9 +86,7 @@ class HospitalDoctorRegisterViewSet(viewsets.ModelViewSet):
 
 
 
-
-
-
+# views.py
 # views.py
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -109,10 +105,9 @@ ENCODER_PATH = os.path.join(settings.BASE_DIR, "userapp/ml_assets/label_encoder.
 
 pipeline = joblib.load(MODEL_PATH)
 label_encoder = joblib.load(ENCODER_PATH)
-# print("Label Encoder Classes:", label_encoder.classes_)
 
 LABEL_MAP = {
-    0: "Bipolar Type-2",
+    0: "Bipolar Type-1",
     1: "Bipolar Type-2",
     2: "Depression",
     3: "Normal"
@@ -120,7 +115,6 @@ LABEL_MAP = {
 
 @api_view(['POST'])
 def depression_predict(request):
-
     try:
         fields = [
             "sadness", "euphoric", "exhausted", "sleep_disorder",
@@ -130,20 +124,29 @@ def depression_predict(request):
         ]
 
         encoded_values = []
+
         for f in fields:
             val = request.data.get(f)
             if val is None:
-                return Response({"error": f"{f} is required"}, status=400)
+                return Response(
+                    {"error": f"{f} is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             encoded_values.append(ENCODING.get(val.lower(), 0))
 
-        input_array = np.array([encoded_values])
-
-        pred_encoded = pipeline.predict(input_array)
-        pred_value = int(pred_encoded[0])
-
-        # Manual mapping
-        pred_label = LABEL_MAP.get(pred_value, f"Unknown class: {pred_value}")
+        # -------------------------------
+        # ✅ NORMAL OVERRIDE LOGIC
+        # -------------------------------
+        # most-often = 0, seldom = 1
+        # If ALL values are <= 1 → Normal
+        if all(v <= 1 for v in encoded_values):
+            pred_label = "Normal"
+        else:
+            input_array = np.array([encoded_values])
+            pred_encoded = pipeline.predict(input_array)
+            pred_value = int(pred_encoded[0])
+            pred_label = LABEL_MAP.get(pred_value, "Unknown")
 
         serializer = DepressionPredictionSerializer(data={
             **request.data,
@@ -156,11 +159,156 @@ def depression_predict(request):
                 "status": "success",
                 "prediction": pred_label,
                 "data": serializer.data
-            }, status=201)   
-        return Response(serializer.errors, status=400)
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# --- PORTED FROM FLASK app.py ---
+
+ADV_MODEL_PATH = os.path.join(settings.BASE_DIR, "userapp/ml_assets/depression_model.pkl")
+ADV_SCALER_PATH = os.path.join(settings.BASE_DIR, "userapp/ml_assets/scaler.pkl")
+
+adv_model = joblib.load(ADV_MODEL_PATH)
+adv_scaler = joblib.load(ADV_SCALER_PATH)
+
+FEATURE_COLS = [
+    "Gender", "Age", "Education_Level", "Employment_Status",
+    "Depression_Type", "Symptoms", "Low_Energy", "Low_SelfEsteem",
+    "Search_Depression_Online", "Worsening_Depression", "Your overeating level",
+    "How many times you eat ", "SocialMedia_Hours", "SocialMedia_WhileEating",
+    "Sleep_Hours", "Nervous_Level", "Depression_Score", "Coping_Methods",
+    "Self_Harm", "Mental_Health_Support", "Suicide_Attempts",
+    "Risk_Score", "Sleep_Deficit", "High_Nervousness",
+    "Excessive_SocialMedia", "No_Support", "SocialMedia_x_Eating",
+    "Nervousness_x_Energy", "Score_x_Nervous",
+]
+
+def engineer_features(data_dict):
+    full = dict(data_dict)
+    full["Risk_Score"] = (
+        full.get("Low_Energy", 0)
+        + full.get("Low_SelfEsteem", 0)
+        + full.get("Worsening_Depression", 0)
+        + full.get("Self_Harm", 0)
+    )
+    full["Sleep_Deficit"] = int(full.get("Sleep_Hours", 8) < 6)
+    full["High_Nervousness"] = int(full.get("Nervous_Level", 0) >= 7)
+    full["Excessive_SocialMedia"] = int(full.get("SocialMedia_Hours", 0) > 6)
+    full["No_Support"] = int(full.get("Mental_Health_Support", 0) == 0)
+    full["SocialMedia_x_Eating"] = full.get("SocialMedia_Hours", 0) * full.get("SocialMedia_WhileEating", 0)
+    full["Nervousness_x_Energy"] = full.get("Nervous_Level", 0) * full.get("Low_Energy", 0)
+    full["Score_x_Nervous"] = full.get("Depression_Score", 0) * full.get("Nervous_Level", 0)
+    return full
+
+RECOVERY_SUGGESTIONS = {
+    "sleep": {
+        "condition": lambda d: d.get("Sleep_Hours", 8) < 6,
+        "title": "🛌 Improve Sleep Hygiene",
+        "tips": ["Aim for 7-9 hours of sleep.", "Maintain a consistent schedule.", "Avoid screens before bed."]
+    },
+    "energy": {
+        "condition": lambda d: d.get("Low_Energy", 0) == 1,
+        "title": "⚡ Boost Energy Levels",
+        "tips": ["Exercise daily.", "Eat balanced meals.", "Stay hydrated."]
+    },
+    "self_harm": {
+        "condition": lambda d: d.get("Self_Harm", 0) == 1,
+        "title": "🆘 SEEK IMMEDIATE SUPPORT",
+        "tips": ["Reach out to a professional immediately.", "Contact AASRA (India): 9820466726."]
+    },
+    "general": {
+        "condition": lambda d: True,
+        "title": "🌟 General Well-being",
+        "tips": ["Spend time outdoors.", "Connect with loved ones.", "Keep a positive mindset."]
+    }
+}
+
+ADV_DEP_TYPE_MAP = {
+    0: "Major Depressive Disorder", 1: "Persistent Depressive Disorder", 2: "Bipolar Disorder",
+    3: "Cyclothymic Disorder", 4: "Postpartum Depression", 5: "Premenstrual Dysphoric Disorder",
+    6: "Seasonal Affective Disorder", 7: "Atypical Depression", 8: "Psychotic Depression",
+    9: "Situational Depression", 10: "Melancholic Depression", 11: "Catatonic Depression"
+}
+
+import pandas as pd
+
+class AdvancedDepressionPredictView(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            full_data = engineer_features(data)
+            
+            input_df = pd.DataFrame([full_data])
+            input_scaled = adv_scaler.transform(input_df[FEATURE_COLS])
+            
+            prob = adv_model.predict_proba(input_scaled)[0][1]
+            is_depressed = prob >= 0.5
+            
+            active_suggestions = []
+            for s in RECOVERY_SUGGESTIONS.values():
+                if s["condition"](full_data):
+                    active_suggestions.append({
+                        "title": s["title"],
+                        "tips": s["tips"]
+                    })
+            
+            potential_type = ADV_DEP_TYPE_MAP.get(full_data.get("Depression_Type", 0), "None")
+            
+            prediction_label = potential_type if is_depressed else "None"
+            
+            # Map underscores to spaces for model mapping if needed, or just use raw data
+            save_data = {
+                "user": data.get("user"),
+                "gender": data.get("Gender"),
+                "age": data.get("Age"),
+                "education_level": data.get("Education_Level"),
+                "employment_status": data.get("Employment_Status"),
+                "depression_type": data.get("Depression_Type"),
+                "symptoms": data.get("Symptoms"),
+                "low_energy": data.get("Low_Energy"),
+                "low_self_esteem": data.get("Low_SelfEsteem"),
+                "search_depression_online": data.get("Search_Depression_Online"),
+                "worsening_depression": data.get("Worsening_Depression"),
+                "overeating_level": data.get("Your overeating level"),
+                "eating_frequency": data.get("How many times you eat "),
+                "social_media_hours": data.get("SocialMedia_Hours"),
+                "social_media_while_eating": data.get("SocialMedia_WhileEating"),
+                "sleep_hours": data.get("Sleep_Hours"),
+                "nervous_level": data.get("Nervous_Level"),
+                "depression_score": data.get("Depression_Score"),
+                "coping_methods": data.get("Coping_Methods"),
+                "self_harm": data.get("Self_Harm"),
+                "mental_health_support": data.get("Mental_Health_Support"),
+                "suicide_attempts": data.get("Suicide_Attempts"),
+                
+                "is_depressed": bool(is_depressed),
+                "probability": float(prob),
+                "potential_type": prediction_label,
+                "suggestions": active_suggestions
+            }
+            
+            serializer = AdvancedDepressionPredictionSerializer(data=save_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "status": "success",
+                    "is_depressed": bool(is_depressed),
+                    "probability": float(prob),
+                    "potential_type": prediction_label,
+                    "suggestions": active_suggestions,
+                    "id": serializer.data.get("id")
+                }, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 from userapp.adhd_encoding import ADHD_ENCODING
 
@@ -405,16 +553,25 @@ def view_nearby_hospital_doctors(request, user_id):
     if not user.place:
         return Response({"error": "User place not available"}, status=400)
 
-    # ✅ Only approved & available doctors in the same place
+    # ✅ Only approved & available doctors
     doctors = tbl_hospital_doctor_register.objects.filter(
-        status='approved', available=True, place__iexact=user.place
+        status='approved', available=True
     )
+    
+    # Try filtering by place first
+    nearby_doctors_query = doctors.filter(place__iexact=user.place)
+    
+    if nearby_doctors_query.exists():
+        doctors_to_show = nearby_doctors_query
+    else:
+        # Fallback: Show all approved/available if none in the specific place
+        doctors_to_show = doctors
 
-    if not doctors.exists():
-        return Response({"message": "No nearby hospital doctors found in your area."}, status=200)
+    if not doctors_to_show.exists():
+        return Response({"message": "No hospital doctors found."}, status=200)
 
     nearby_doctors = []
-    for doctor in doctors:
+    for doctor in doctors_to_show:
         nearby_doctors.append({
             "id": doctor.id,
             "name": doctor.name,
@@ -580,6 +737,20 @@ class doctor_view_booking_hospital(APIView):
                 # "booked_at": booking.created_at,
             })
         return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def update_hospital_booking_status(request, booking_id):
+    try:
+        booking = HospitalBooking.objects.get(id=booking_id)
+        new_status = request.data.get('status')
+        if new_status not in ['approved', 'rejected']:
+            return Response({'message': 'Invalid status. Use "approved" or "rejected".'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        booking.status = new_status
+        booking.save()
+        return Response({'message': f'Booking {new_status} successfully'}, status=status.HTTP_200_OK)
+    except HospitalBooking.DoesNotExist:
+        return Response({'message': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
     
 
 class UserViewBook(APIView):
@@ -588,3 +759,175 @@ class UserViewBook(APIView):
         serializer = BookSerializer(books, many=True)
         return Response(serializer.data)
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from google import genai
+import os
+from dotenv import load_dotenv
+from django.conf import settings
+
+# Load environment variables
+load_dotenv()
+
+# Create GenAI client
+client = genai.Client(api_key=settings.GOOGLE_API_KEY)
+
+MODEL_NAME = "gemini-2.5-flash"
+
+# -----------------------------
+# Keywords
+# -----------------------------
+
+DEPRESSION_KEYWORDS = [
+    "depression", "depressed", "sad", "sadness", "hopeless", "worthless",
+    "lonely", "anxiety", "panic", "stress", "overthinking", "mental health",
+    "mood swings", "crying", "low mood", "tired", "fatigue", "exhausted",
+    "sleep disorder", "insomnia", "oversleeping",
+    "loss of interest", "no motivation", "burnout",
+    "self hate", "guilt", "shame",
+    "therapy", "counselling", "psychologist", "psychiatrist",
+    "antidepressant", "medicine", "treatment", "healing",
+    "bipolar","bipolar-type 1","bipolar-type 2","manic depression","cyclothymic disorder"
+]
+
+CRISIS_KEYWORDS = [
+    "kill myself", "end my life", "suicide", "self harm", "hurt myself",
+    "no reason to live", "die"
+]
+
+GREETINGS = ["hi", "hello", "hey", "morning", "evening", "afternoon"]
+
+# -----------------------------
+# Chatbot API
+# -----------------------------
+
+class ChatbotAPIView(APIView):
+
+    def post(self, request):
+
+        user_message = request.data.get("message", "").strip()
+
+        if not user_message:
+            return Response({
+                "type": "error",
+                "reply": "Message cannot be empty."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        user_message_lower = user_message.lower()
+        user_words = user_message_lower.split()
+
+        # 🚨 Crisis check
+        if any(word in user_message_lower for word in CRISIS_KEYWORDS):
+            return Response({
+                "type": "crisis",
+                "reply": (
+                    "I'm really sorry that you're feeling this way 💔. "
+                    "You’re not alone, and help is available.\n\n"
+                    "📞 India Suicide Prevention Helpline: 9152987821\n"
+                    "📞 AASRA: 91-22-27546669"
+                )
+            })
+
+        # Depression support
+        if any(keyword in user_message_lower for keyword in DEPRESSION_KEYWORDS):
+
+            prompt = f"""
+You are a compassionate mental health support assistant.
+
+Respond empathetically and calmly.
+Do NOT diagnose or prescribe medication.
+Encourage healthy coping strategies and seeking professional help.
+
+User message: {user_message}
+"""
+
+            try:
+                response = client.models.generate_content(
+                    model=MODEL_NAME,
+                    contents=prompt
+                )
+
+                reply = response.candidates[0].content.parts[0].text
+
+                return Response({
+                    "type": "mental_health_support",
+                    "reply": reply
+                })
+
+            except Exception as e:
+                return Response({
+                    "type": "error",
+                    "reply": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Greeting
+        if any(greet in user_words for greet in GREETINGS):
+            return Response({
+                "type": "greeting",
+                "reply": "Hello 💙 I'm here to support you."
+            })
+
+        # Not related
+        return Response({
+            "type": "not_related",
+            "reply": "I’m here to help with mental health topics like depression and stress."
+        })
+import os
+from dotenv import load_dotenv
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from google import genai
+
+load_dotenv()
+
+# Gemini configuration
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+MODEL_NAME = "models/gemini-flash-latest"
+
+
+class TimetableAPIView(APIView):
+    def post(self, request):
+        user_input = request.data.get("message")
+
+        if not user_input:
+            return Response(
+                {"error": "Message is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        prompt = f"""
+You are an expert academic planner.
+
+Create a DAILY STUDY TIMETABLE in MARKDOWN TABLE format.
+
+Strict rules:
+- Output ONLY the table (no text before or after)
+- Columns must be exactly: Time | Activity | Subject
+- Balanced schedule with breaks
+- Allocate more study time to difficult subjects
+- Realistic time slots
+
+Student details:
+{user_input}
+"""
+
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt
+            )
+
+            reply = response.candidates[0].content.parts[0].text
+
+            return Response(
+                {"reply": reply},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

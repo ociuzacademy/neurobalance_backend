@@ -18,6 +18,99 @@ class Register(models.Model):
         return self.name
 
 
+# models.py
+from django.db import models
+from .models import Register  # your user table
+
+class DepressionPrediction(models.Model):
+    user = models.ForeignKey(Register, on_delete=models.CASCADE)
+
+    sadness = models.CharField(max_length=20)
+    euphoric = models.CharField(max_length=20)
+    exhausted = models.CharField(max_length=20)
+    sleep_disorder = models.CharField(max_length=20)
+    mood_swing = models.CharField(max_length=20)
+    suicidal_thoughts = models.CharField(max_length=20)
+    anorexia = models.CharField(max_length=20)
+    authority_respect = models.CharField(max_length=20)
+    try_explanation = models.CharField(max_length=20)
+    aggressive_response = models.CharField(max_length=20)
+    ignore_move_on = models.CharField(max_length=20)
+    nervous_breakdown = models.CharField(max_length=20)
+    admit_mistakes = models.CharField(max_length=20)
+    overthinking = models.CharField(max_length=20)
+
+    prediction_result = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.name} - {self.prediction_result}"
+
+class AdvancedDepressionPrediction(models.Model):
+    user = models.ForeignKey(Register, on_delete=models.CASCADE)
+    
+    gender = models.IntegerField()
+    age = models.FloatField()
+    education_level = models.IntegerField()
+    employment_status = models.IntegerField()
+    depression_type = models.IntegerField()
+    symptoms = models.IntegerField()
+    low_energy = models.IntegerField()
+    low_self_esteem = models.IntegerField()
+    search_depression_online = models.IntegerField()
+    worsening_depression = models.IntegerField()
+    overeating_level = models.FloatField()
+    eating_frequency = models.IntegerField()
+    social_media_hours = models.FloatField()
+    social_media_while_eating = models.IntegerField()
+    sleep_hours = models.FloatField()
+    nervous_level = models.FloatField()
+    depression_score = models.FloatField()
+    coping_methods = models.IntegerField()
+    self_harm = models.IntegerField()
+    mental_health_support = models.IntegerField()
+    suicide_attempts = models.FloatField()
+    
+    is_depressed = models.BooleanField()
+    probability = models.FloatField()
+    potential_type = models.CharField(max_length=100)
+    suggestions = models.JSONField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.name} - {self.potential_type} ({self.probability})"
+
+
+
+class ADHDPrediction(models.Model):
+    user = models.ForeignKey(Register, on_delete=models.CASCADE)
+
+    age = models.IntegerField()
+    gender = models.CharField(max_length=10)  # Male/Female/Other
+    sleep_hour_avg = models.FloatField()
+
+    easily_distracted = models.IntegerField()
+    forgetful_daily_tasks = models.IntegerField()
+    poor_organization = models.IntegerField()
+    difficulty_sustaining_attention = models.IntegerField()
+    restlessness = models.IntegerField()
+    impulsivity_score = models.IntegerField()
+
+    screen_time_daily = models.FloatField()
+    phone_unlocks_per_day = models.IntegerField()
+    working_memory_score = models.IntegerField()
+
+    symptom_score = models.IntegerField()
+    adhd_result = models.CharField(max_length=50)  # ADHD / No ADHD
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.name} - {self.adhd_result}"
+
+
+
 
 
 
@@ -55,61 +148,6 @@ class tbl_hospital_doctor_register(models.Model):
 
 
 
-# models.py
-from django.db import models
-from .models import Register  # your user table
-
-class DepressionPrediction(models.Model):
-    user = models.ForeignKey(Register, on_delete=models.CASCADE)
-
-    sadness = models.CharField(max_length=20)
-    euphoric = models.CharField(max_length=20)
-    exhausted = models.CharField(max_length=20)
-    sleep_disorder = models.CharField(max_length=20)
-    mood_swing = models.CharField(max_length=20)
-    suicidal_thoughts = models.CharField(max_length=20)
-    anorexia = models.CharField(max_length=20)
-    authority_respect = models.CharField(max_length=20)
-    try_explanation = models.CharField(max_length=20)
-    aggressive_response = models.CharField(max_length=20)
-    ignore_move_on = models.CharField(max_length=20)
-    nervous_breakdown = models.CharField(max_length=20)
-    admit_mistakes = models.CharField(max_length=20)
-    overthinking = models.CharField(max_length=20)
-
-    prediction_result = models.CharField(max_length=50, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.name} - {self.prediction_result}"
-
-
-
-class ADHDPrediction(models.Model):
-    user = models.ForeignKey(Register, on_delete=models.CASCADE)
-
-    age = models.IntegerField()
-    gender = models.CharField(max_length=10)  # Male/Female/Other
-    sleep_hour_avg = models.FloatField()
-
-    easily_distracted = models.IntegerField()
-    forgetful_daily_tasks = models.IntegerField()
-    poor_organization = models.IntegerField()
-    difficulty_sustaining_attention = models.IntegerField()
-    restlessness = models.IntegerField()
-    impulsivity_score = models.IntegerField()
-
-    screen_time_daily = models.FloatField()
-    phone_unlocks_per_day = models.IntegerField()
-    working_memory_score = models.IntegerField()
-
-    symptom_score = models.IntegerField()
-    adhd_result = models.CharField(max_length=50)  # ADHD / No ADHD
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.name} - {self.adhd_result}"
 
 
 

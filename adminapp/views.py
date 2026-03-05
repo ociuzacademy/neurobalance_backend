@@ -1,11 +1,8 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from .models import Admin
-from userapp.models import  Register
+from userapp.models import HospitalBooking, Register
 from django.shortcuts import get_object_or_404
 # Create your views here.
 @require_http_methods(["GET", "POST"])

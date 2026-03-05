@@ -141,3 +141,10 @@ MEDIA_ROOT=os.path.join(BASE_DIR,'media')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+GOOGLE_API_KEY="AIzaSyBh3EVZsxffGet-71WcKTWSg1jom_ocNgQ"
+# Optional debug (masked):
+if GOOGLE_API_KEY:
+    print("GOOGLE_API_KEY loaded:", GOOGLE_API_KEY[:4] + "..." + GOOGLE_API_KEY[-4:])
+else:
+    print("No Google API key found. Set GOOGLE_API_KEY in .env")
