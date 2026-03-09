@@ -105,10 +105,16 @@ class HospitalDoctorTimeSlotGroupSerializer(serializers.ModelSerializer):
 class HospitalDoctorFeedbackSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.name', read_only=True)
     doctor_name = serializers.CharField(source='doctor.name', read_only=True)
+    booking_date = serializers.CharField(source='booking.date', read_only=True)
+    booking_time = serializers.CharField(source='booking.time', read_only=True)
 
     class Meta:
         model = HospitalDoctorFeedback
-        fields = ['id', 'user', 'user_name', 'doctor', 'doctor_name', 'rating', 'comments', 'created_at']
+        fields = [
+            'id', 'user', 'user_name', 'doctor', 'doctor_name', 
+            'booking', 'booking_date', 'booking_time', 
+            'rating', 'tension_free_level', 'comments', 'created_at'
+        ]
         
 
 

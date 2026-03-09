@@ -142,7 +142,7 @@ MEDIA_ROOT=os.path.join(BASE_DIR,'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-GOOGLE_API_KEY="" #load your api key here
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # Optional debug (masked):
 if GOOGLE_API_KEY:
     print("GOOGLE_API_KEY loaded:", GOOGLE_API_KEY[:4] + "..." + GOOGLE_API_KEY[-4:])

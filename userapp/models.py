@@ -189,7 +189,9 @@ class HospitalBooking(models.Model):
 class HospitalDoctorFeedback(models.Model):
     user = models.ForeignKey(Register, on_delete=models.CASCADE, related_name='hospital_feedbacks')
     doctor = models.ForeignKey('tbl_hospital_doctor_register', on_delete=models.CASCADE, related_name='hospital_feedbacks')
+    booking = models.ForeignKey(HospitalBooking, on_delete=models.SET_NULL, null=True, blank=True)
     rating = models.IntegerField()  # e.g., 1–5 stars
+    tension_free_level = models.IntegerField(default=0) # 1-10 scale
     comments = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

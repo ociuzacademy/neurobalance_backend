@@ -21,7 +21,7 @@ hospital_doctor_profile_update = HospitalDoctorProfileViewSet.as_view({
 # Swagger setup
 schema_view = get_schema_view(
     openapi.Info(
-        title="Neurobalance API",
+        title="NeuroBalance API",
         default_version='v1',
         description="API documentation with Swagger & DRF Router",
         terms_of_service="https://www.example.com/terms/",
@@ -42,6 +42,7 @@ urlpatterns = [
 
     path('chat/', ChatbotAPIView.as_view(), name='chatbot_api'),
     path("predict/", depression_predict, name="depression_predict"),
+    path("advanced-predict/", AdvancedDepressionPredictView.as_view(), name="advanced_depression_predict"),
     path("predict-adhd/", views.adhd_predict, name="adhd_predict"),
     path("user_view_book/", UserViewBook.as_view(), name="user_view_book"),
     path('view_hospital_doctor/<int:doctor_id>/', views.view_hospital_doctor_profile, name='view_hospital_doctor_profile'),
@@ -55,5 +56,6 @@ urlpatterns = [
     path('hospital/doctor/book-slot/', views.book_hospital_doctor_slot, name='book_hospital_doctor_slot'),
     path('user/<int:user_id>/hospital/bookings/', views.user_view_booking_hospital.as_view(), name='user_view_hospital_bookings'),
     path('hospital/doctor/<int:doctor_id>/bookings/', views.doctor_view_booking_hospital.as_view(), name='doctor_view_booking_hospital'),
+    path('hospital/booking/<int:booking_id>/update-status/', views.update_hospital_booking_status, name='update_hospital_booking_status'),
     path("timetablechat/", TimetableAPIView.as_view(), name="chat"),
 ]
